@@ -1,0 +1,28 @@
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto
+    container_name: mqtt-broker
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto_config:/mosquitto/config
+
+  messaging-service:
+    build: ./messaging_service
+    container_name: messaging-service
+    restart: always
+    depends_on:
+      - mqtt-broker
+    env_file:
+      - ./messaging_service/.env
+    volumes:
+      - ./messaging_service/.gammurc:/root/.gammurc:ro
+      - ./messaging_service/.gammurc:/etc/gammu-smsdrc:ro
+    devices:
+      # Raspberry Pi UART. Change this for another board or a USB dongle.
+      - "/dev/serial0:/dev/serial0"
+    # Needed to reach the serial device. See "What this is not ready for" in the README:
+    # granting the device plus the dialout group is the narrower way to do this.
+    privileged: true
